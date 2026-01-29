@@ -1,65 +1,70 @@
-import Image from "next/image";
+'use client'
+
+import { useState, useCallback } from 'react'
+import { Canvas } from '@react-three/fiber'
+import { Environment } from '@react-three/drei'
+import { Vector3 } from 'three'
+import { Duck } from '@/app/components/Duck'
+import { Water } from '@/app/components/Water'
 
 export default function Home() {
+  const [lastImpulse, setLastImpulse] = useState<{ point: Vector3, id: number } | null>(null)
+
+  const handleWaterClick = useCallback((point: Vector3) => {
+    setLastImpulse({ point, id: Math.random() })
+  }, [])
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div style={{ position: 'relative', width: '100vw', height: '100vh', background: '#1a1a1a' }}>
+
+      {/* 1. THE 3D SCENE */}
+      <Canvas
+        camera={{ position: [0, 15, 0], fov: 45 }}
+        gl={{ logarithmicDepthBuffer: true }}
+      >
+        <Environment preset="sunset" />
+        <ambientLight intensity={0.5} />
+        <directionalLight position={[5, 10, 5]} intensity={1} />
+
+        <Duck
+          position={[0, 0.5, 0]}
+          impulse={lastImpulse}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+        <Water onImpulse={handleWaterClick} />
+      </Canvas>
+
+      {/* 2. THE UI OVERLAY (Pointer events none is crucial!) */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none', // <--- Clicks go through this div
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between', // Pushes text to top/bottom
+        padding: '40px',
+        boxSizing: 'border-box',
+        color: 'rgba(255, 255, 255, 0.6)', // Subtle text color
+        fontFamily: 'sans-serif',
+        userSelect: 'none' // Prevents highlighting text while tapping
+      }}>
+
+        {/* Top Instruction */}
+        <div style={{ textAlign: 'center', fontSize: '1.2rem', letterSpacing: '2px' }}>
+          TAP ANYWHERE TO RIPPLE
+        </div>
+
+        <div style={{ textAlign: 'center', fontSize: '0.8rem' }}>
+          <p style={{ margin: 0 }}>Created by <strong>FakeMonika</strong></p>
+          <p style={{ margin: '5px 0 0 0', opacity: 0.7 }}>
+            Duck Model by <a href="https://sketchfab.com/3d-models/rubber-duck-ccd424db8bae480bbdc1a4a2f812c0e8" style={{ color: 'inherit' }}>Darien</a>
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+
+      </div>
+
     </div>
-  );
+  )
 }
