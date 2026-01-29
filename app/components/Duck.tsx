@@ -24,7 +24,7 @@ export function Duck({ impulse, ...props }: DuckProps) {
   const MAX_INFLUENCE_DIST = 10
   const WATER_LEVEL = 0.5
 
-  const TILT_SENSITIVITY = 0.02
+  const TILT_SENSITIVITY = 0.005
 
   const velocity = useRef(new THREE.Vector3(0, 0, 0))
 
