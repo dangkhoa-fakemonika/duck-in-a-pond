@@ -15,6 +15,7 @@ export function Duck({ impulse, ...props }: DuckProps) {
   const { nodes, materials } = useGLTF('/duck.gltf') as any
   const groupRef = useRef<THREE.Group>(null)
   const { viewport } = useThree()
+  const tiltRef = useRef({ x: 0, z: 0 })
 
   const FRICTION = 0.98
   const PUSH_STRENGTH = 0.1
@@ -23,7 +24,24 @@ export function Duck({ impulse, ...props }: DuckProps) {
   const MAX_INFLUENCE_DIST = 10
   const WATER_LEVEL = 0.5
 
+  const TILT_SENSITIVITY = 0.02
+
   const velocity = useRef(new THREE.Vector3(0, 0, 0))
+
+  useEffect(() => {
+    const handleOrientation = (event: DeviceOrientationEvent) => {
+      const { gamma, beta } = event
+
+      if (gamma === null || beta === null) return
+      const xForce = Math.min(Math.max(gamma, -45), 45) / 45
+      const zForce = Math.min(Math.max(beta, -45), 45) / 45
+
+      tiltRef.current = { x: xForce, z: zForce }
+    }
+
+    window.addEventListener('deviceorientation', handleOrientation)
+    return () => window.removeEventListener('deviceorientation', handleOrientation)
+  }, [])
 
   useEffect(() => {
     if (!impulse || !groupRef.current) return
@@ -78,6 +96,9 @@ export function Duck({ impulse, ...props }: DuckProps) {
     const mesh = groupRef.current
     const vel = velocity.current
 
+    vel.x += tiltRef.current.x * TILT_SENSITIVITY
+    vel.z += tiltRef.current.z * TILT_SENSITIVITY
+
     mesh.position.x += vel.x
     mesh.position.z += vel.z
 
@@ -93,7 +114,6 @@ export function Duck({ impulse, ...props }: DuckProps) {
     if (mesh.position.z > limitZ) { mesh.position.z = limitZ; vel.z *= -0.5 }
     if (mesh.position.z < -limitZ) { mesh.position.z = -limitZ; vel.z *= -0.5 }
 
-    // Rotation
     if (new THREE.Vector2(vel.x, vel.z).length() > 0.001) {
       const targetRotation = Math.atan2(vel.x, vel.z)
       const currentRotation = mesh.rotation.y

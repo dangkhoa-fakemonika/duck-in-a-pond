@@ -11,13 +11,30 @@ export default function Home() {
   const [lastImpulse, setLastImpulse] = useState<{ point: Vector3, id: number } | null>(null)
 
   const handleWaterClick = useCallback((point: Vector3) => {
+    requestMotionPermission()
     setLastImpulse({ point, id: Math.random() })
   }, [])
+
+  const requestMotionPermission = () => {
+    if (
+      typeof DeviceMotionEvent !== 'undefined' &&
+      typeof (DeviceMotionEvent as any).requestPermission === 'function'
+    ) {
+      (DeviceMotionEvent as any).requestPermission()
+        .then((response: string) => {
+          if (response === 'granted') {
+            console.log("Motion access granted")
+          }
+        })
+        .catch(console.error)
+    } else {
+      console.log("Motion permission not required or not supported")
+    }
+  }
 
   return (
     <div style={{ position: 'relative', width: '100vw', height: '100vh', background: '#1a1a1a' }}>
 
-      {/* 1. THE 3D SCENE */}
       <Canvas
         camera={{ position: [0, 15, 0], fov: 45 }}
         gl={{ logarithmicDepthBuffer: true }}
@@ -33,25 +50,23 @@ export default function Home() {
         <Water onImpulse={handleWaterClick} />
       </Canvas>
 
-      {/* 2. THE UI OVERLAY (Pointer events none is crucial!) */}
       <div style={{
         position: 'absolute',
         top: 0,
         left: 0,
         width: '100%',
         height: '100%',
-        pointerEvents: 'none', // <--- Clicks go through this div
+        pointerEvents: 'none',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'space-between', // Pushes text to top/bottom
+        justifyContent: 'space-between',
         padding: '40px',
         boxSizing: 'border-box',
-        color: 'rgba(255, 255, 255, 0.6)', // Subtle text color
+        color: 'rgba(255, 255, 255, 0.6)',
         fontFamily: 'sans-serif',
-        userSelect: 'none' // Prevents highlighting text while tapping
+        userSelect: 'none'
       }}>
 
-        {/* Top Instruction */}
         <div style={{ textAlign: 'center', fontSize: '1.2rem', letterSpacing: '2px' }}>
           TAP ANYWHERE TO RIPPLE
         </div>
